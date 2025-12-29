@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-green
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo
+      color: green
+  template:
+    metadata:
+      labels:
+        app: demo
+        color: green
+    spec:
+      containers:
+      - name: app
+        image: 423623840023.dkr.ecr.us-east-1.amazonaws.com/bg-demo:green
+        ports:
+        - containerPort: 8080

@@ -1,0 +1,70 @@
+name: CI/CD Build Scan Deploy (Blue-Green)
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 423623840023
+  ECR_REPOSITORY: bg-demo
+  CLUSTER_NAME: eks-blue-green-eks-cluster
+  IMAGE_TAG: green
+
+jobs:
+  build-scan-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Configure AWS credentials
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    # 3. Login to Amazon ECR
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # 4. Build Docker image (GREEN)
+    - name: Build Docker image
+      run: |
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./app
+
+    # 5. Trivy image scan (security gate)
+    - name: Scan image with Trivy
+      uses: aquasecurity/trivy-action@0.20.0
+      with:
+        image-ref: $ECR_REPOSITORY:${{ env.IMAGE_TAG }}
+        format: table
+        severity: CRITICAL,HIGH
+        ignore-unfixed: true
+        exit-code: 1
+
+    # 6. Tag and push image to ECR
+    - name: Push image to Amazon ECR
+      run: |
+        docker tag $ECR_REPOSITORY:$IMAGE_TAG \
+          $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+
+        docker push \
+          $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+
+    # 7. Update kubeconfig
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig \
+          --region $AWS_REGION \
+          --name $CLUSTER_NAME
+
+    # 8. Deploy GREEN to EKS
+    - name: Deploy Green to EKS
+      run: |
+        kubectl apply -f k8s/deployment-green.yml
