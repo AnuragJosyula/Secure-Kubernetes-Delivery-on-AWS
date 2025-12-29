@@ -1,9 +1,13 @@
-.terraform/
+# Terraform
+**/.terraform/
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
 .terraform.lock.hcl
 
+# Python
 __pycache__/
 *.pyc
 
-.env
+# OS / editor
+.vscode/
+.DS_Store
