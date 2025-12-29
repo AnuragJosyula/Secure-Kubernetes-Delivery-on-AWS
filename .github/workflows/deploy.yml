@@ -47,6 +47,7 @@ jobs:
         severity: CRITICAL,HIGH
         ignore-unfixed: true
         exit-code: 1
+        scanners: vuln
 
     # 6. Tag and push image to ECR
     - name: Push image to Amazon ECR
