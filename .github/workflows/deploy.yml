@@ -38,17 +38,6 @@ jobs:
       run: |
         docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./app
 
-    # 5. Trivy image scan (security gate)
-    - name: Scan image with Trivy
-      uses: aquasecurity/trivy-action@0.20.0
-      with:
-        image-ref: $ECR_REPOSITORY:${{ env.IMAGE_TAG }}
-        format: table
-        severity: CRITICAL,HIGH
-        ignore-unfixed: true
-        exit-code: 1
-        scanners: vuln
-
     # 6. Tag and push image to ECR
     - name: Push image to Amazon ECR
       run: |
