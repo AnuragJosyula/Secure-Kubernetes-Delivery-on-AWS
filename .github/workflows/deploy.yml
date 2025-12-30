@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  AWS_ACCOUNT_ID: 423623840023
+  AWS_ACCOUNT_ID: ""
   ECR_REPOSITORY: bg-demo
   CLUSTER_NAME: eks-blue-green-eks-cluster
   IMAGE_TAG: green
